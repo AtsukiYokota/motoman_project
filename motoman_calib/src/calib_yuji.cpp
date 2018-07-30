@@ -18,8 +18,15 @@
 #include <pcl/filters/passthrough.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/search/kdtree.h>
+
+#include <pcl/common/io.h>
+#include <pcl/features/fpfh.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/segmentation/sac_segmentation.h>
+
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl_ros/impl/transforms.hpp>
+
 
 const int sampling_points = 10000;
 
@@ -132,14 +139,34 @@ public:
     link_names_.push_back("link_t.stl");
     frame_names_.push_back("/link_t");
 
+    // link_names_.push_back("base_link_collision.stl");
+    // frame_names_.push_back("/base_link");
+    // link_names_.push_back("link_s_collision.stl");
+    // frame_names_.push_back("/link_s");
+    // link_names_.push_back("link_l_collision.stl");
+    // frame_names_.push_back("/link_l");
+    // link_names_.push_back("link_e_collision.stl");
+    // frame_names_.push_back("/link_e");
+    // link_names_.push_back("link_u_collision.stl");
+    // frame_names_.push_back("/link_u");
+    // link_names_.push_back("link_r_collision.stl");
+    // frame_names_.push_back("/link_r");
+    // link_names_.push_back("link_b_collision.stl");
+    // frame_names_.push_back("/link_b");
+    // link_names_.push_back("link_t_collision.stl");
+    // frame_names_.push_back("/link_t");
+
+
     corrected_cloud_frame_ = "kinect2_rgb_optical_frame";
 
     for(int i = 0; i < link_names_.size(); ++i){
-      this->getMesh(ros::package::getPath("motoman_description")+"/meshes/sia5/collision/STL/"+link_names_[i], frame_names_[i]);
+      // this->getMesh(ros::package::getPath("motoman_description")+"/meshes/sia5/collision/"+link_names_[i], frame_names_[i]);
+      this->getMesh(ros::package::getPath("motoman_calib")+"/STL/sia5/"+link_names_[i], frame_names_[i]);
+
     }
 
-    frame_names_.push_back("/kinect_hand_link");
-    this->getMesh(ros::package::getPath("motoman_description")+"/meshes/sensor/visual/COLLADA/kinectv2.stl", "kinect_hand_link");
+    // frame_names_.push_back("/kinect_hand_link");
+    // this->getMesh(ros::package::getPath("motoman_description")+"/meshes/sensor/visual/COLLADA/kinectv2.stl", "kinect_hand_link");
 
     frame_names_.push_back("dhand_adapter_link");
     frame_names_.push_back("dhand_base_link");
@@ -153,7 +180,7 @@ public:
     frame_names_.push_back("dhand_finger_top_middle_link");
     frame_names_.push_back("dhand_finger_top_right_link");
     this->getMesh(ros::package::getPath("dhand_description")+"/meshes/collision/adapter.STL", "dhand_adapter_link");
-  this->getMesh(ros::package::getPath("dhand_description")+"/meshes/collision/base.STL", "dhand_base_link");
+    this->getMesh(ros::package::getPath("dhand_description")+"/meshes/collision/base.STL", "dhand_base_link");
 	this->getMesh(ros::package::getPath("dhand_description")+"/meshes/collision/finger/finger_base.STL", "dhand_finger_base_left_link");
 	this->getMesh(ros::package::getPath("dhand_description")+"/meshes/collision/finger/finger_base.STL", "dhand_finger_base_middle_link");
 	this->getMesh(ros::package::getPath("dhand_description")+"/meshes/collision/finger/finger_base.STL", "dhand_finger_base_right_link");
@@ -185,6 +212,19 @@ public:
     pcl::io::mesh2vtk(mesh, polydata1);
     pcl::PointCloud<pcl::PointXYZ>::Ptr parts_cloud(new pcl::PointCloud<pcl::PointXYZ>);
     uniform_sampling (polydata1, sampling_points, *parts_cloud);
+
+    // pcl::PolygonMesh mesh;
+    // pcl::io::loadPolygonFileSTL(dir_path, mesh);
+    // pcl::PointCloud<pcl::PointXYZ>::Ptr parts_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    // pcl::PointCloud<pcl::PointXYZ> _cloud = mesh (new pcl::PointCloud<pcl::PointXYZ>);
+
+    // pcl::fromPCLPointCloud2(_cloud, *parts_cloud);
+
+    // vtkSmartPointer<vtkPolyData> polydata1 = vtkSmartPointer<vtkPolyData>::New();;
+    // pcl::io::mesh2vtk(mesh, polydata1);
+    // pcl::PointCloud<pcl::PointXYZ>::Ptr parts_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    // uniform_sampling (polydata1, sampling_points, *parts_cloud);
+
     parts_clouds_.push_back(*parts_cloud);
 
     //pcl_conversions::fromPCL(*cloud_1, mesh_pointcloud_);
