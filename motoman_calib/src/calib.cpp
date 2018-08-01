@@ -115,27 +115,27 @@ public:
   MotomanMeshCloud()
     : rate_(1), pcl_shifted_cloud_(new pcl::PointCloud<pcl::PointXYZ>()), init_icp_finished_(false)
   {
-    link_names_.push_back("base_link.stl");
+    link_names_.push_back("base_link_collision.stl");
     frame_names_.push_back("/base_link");
-    link_names_.push_back("link_s.stl");
+    link_names_.push_back("link_s_collision.stl");
     frame_names_.push_back("/link_s");
-    link_names_.push_back("link_l.stl");
+    link_names_.push_back("link_l_collision.stl");
     frame_names_.push_back("/link_l");
-    link_names_.push_back("link_e.stl");
+    link_names_.push_back("link_e_collision.stl");
     frame_names_.push_back("/link_e");
-    link_names_.push_back("link_u.stl");
+    link_names_.push_back("link_u_collision.stl");
     frame_names_.push_back("/link_u");
-    link_names_.push_back("link_r.stl");
+    link_names_.push_back("link_r_collision.stl");
     frame_names_.push_back("/link_r");
-    link_names_.push_back("link_b.stl");
+    link_names_.push_back("link_b_collision.stl");
     frame_names_.push_back("/link_b");
-    link_names_.push_back("link_t.stl");
+    link_names_.push_back("link_t_collision.stl");
     frame_names_.push_back("/link_t");
 
     corrected_cloud_frame_ = "kinect2_rgb_optical_frame";
 
     for(int i = 0; i < link_names_.size(); ++i){
-      this->getMesh(ros::package::getPath("motoman_description")+"/meshes/sia5/collision/STL/"+link_names_[i], frame_names_[i]);
+      this->getMesh(ros::package::getPath("motoman_description")+"/meshes/sia5/collision/"+link_names_[i], frame_names_[i]);
     }
 	frame_names_.push_back("dhand_adapter_link");
 	frame_names_.push_back("dhand_base_link");

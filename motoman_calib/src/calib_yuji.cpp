@@ -27,7 +27,6 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl_ros/impl/transforms.hpp>
 
-
 const int sampling_points = 10000;
 
 // #define gazebo
@@ -212,6 +211,7 @@ public:
     pcl::io::mesh2vtk(mesh, polydata1);
     pcl::PointCloud<pcl::PointXYZ>::Ptr parts_cloud(new pcl::PointCloud<pcl::PointXYZ>);
     uniform_sampling (polydata1, sampling_points, *parts_cloud);
+    parts_clouds_.push_back(*parts_cloud);
 
     // pcl::PolygonMesh mesh;
     // pcl::io::loadPolygonFileSTL(dir_path, mesh);
@@ -219,13 +219,7 @@ public:
     // pcl::PointCloud<pcl::PointXYZ> _cloud = mesh (new pcl::PointCloud<pcl::PointXYZ>);
 
     // pcl::fromPCLPointCloud2(_cloud, *parts_cloud);
-
-    // vtkSmartPointer<vtkPolyData> polydata1 = vtkSmartPointer<vtkPolyData>::New();;
-    // pcl::io::mesh2vtk(mesh, polydata1);
-    // pcl::PointCloud<pcl::PointXYZ>::Ptr parts_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-    // uniform_sampling (polydata1, sampling_points, *parts_cloud);
-
-    parts_clouds_.push_back(*parts_cloud);
+    // parts_clouds_.push_back(*parts_cloud);
 
     //pcl_conversions::fromPCL(*cloud_1, mesh_pointcloud_);
   }
@@ -356,9 +350,9 @@ public:
 		Eigen::Matrix4f eigen_transform;
 		pcl_ros::transformAsMatrix(transform, eigen_transform);
 
-    std::cout << "----Initial position--------------------" << std::endl;
+        std::cout << "----Initial position--------------------" << std::endl;
 		std::cout << eigen_transform << std::endl;
-    std::cout << "----------------------------------------" << std::endl;
+        std::cout << "----------------------------------------" << std::endl;
 		std::cout << "kinect :" << kinect_pointcloud->data.size() << std::endl;
 
 		Eigen::Affine3f eigen_affine_transform(eigen_transform);
@@ -397,14 +391,14 @@ public:
 		mesh_pointcloud_.header.stamp = ros::Time::now();
 		mesh_pointcloud_.header.frame_id = "/base_link";
 		mesh_pointcloud_publisher_.publish(mesh_pointcloud_);
-    // ### ICP Argolithm ####
+        // ### ICP Argolithm ####
 		pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> icp;
 		pcl::PointCloud<pcl::PointXYZ>::Ptr sia5_ptr(new pcl::PointCloud<pcl::PointXYZ>(sia5_cloud_));
 		std::vector<int> nan_index;
 		pcl::removeNaNFromPointCloud(*pcl_shifted_cloud_, *pcl_shifted_cloud_, nan_index);
 		pcl::removeNaNFromPointCloud(*sia5_ptr, *sia5_ptr, nan_index);
 
-		//icp.setMaximumIterations(1000);
+		icp.setMaximumIterations(1000);
 		if(pcl_shifted_cloud_->points.size() != 0){
 		  pcl::PointCloud<pcl::PointXYZ> Final;
 		  Eigen::Vector4f c_sia5, c_kinect;
@@ -414,9 +408,14 @@ public:
 		  Eigen::Translation3f init_translation (c_sia5(0,0)-c_kinect(0,0), c_sia5(1,0)-c_kinect(1,0), c_sia5(2,0)-c_kinect(2,0));
 		  Eigen::Matrix4f init_guess = (init_translation * init_rotation).matrix ();
 		  ROS_INFO_STREAM("Matching Start!!!");
-		  icp.setInputSource(pcl_shifted_cloud_);
+          icp.setInputSource(pcl_shifted_cloud_);
 		  icp.setInputTarget(sia5_ptr);
-      icp.setMaximumIterations(1000);
+          // for (int i = 0; icp.setMaximumIterations(1000); i++ )
+          //   {
+          //     icp.align(Final, init_guess);
+          //     if(icp.getFitnessScore() < icp.setEuclideanFitnessEpsilon (1e-10))
+          //       break;
+          //   }
 		  icp.setTransformationEpsilon (1e-13);
 		  icp.setEuclideanFitnessEpsilon (1e-10);
 		  icp.align(Final, init_guess);
@@ -434,7 +433,7 @@ public:
 			kinect_first_to_corrected = kinect_first_to_corrected.normalized(); //正規化失敗はここ？
 			Eigen::Affine3d eigen_affine3d(kinect_first_to_corrected);
 			tf::transformEigenToTF(eigen_affine3d, fixed_kinect_frame_);
-			Eigen::Matrix3d rotation_matrix = kinect_first_to_corrected.block(0, 0, 3, 3); //←なにこれ？（笑）
+			Eigen::Matrix3d rotation_matrix = kinect_first_to_corrected.block(0, 0, 3, 3);
 			Eigen::Vector3d euler_angles = rotation_matrix.eulerAngles(2, 1, 0); //回転行列からオイラー角を計算
 			std::cout << "<origin xyz=\"" << kinect_first_to_corrected(0, 3) << " "
 					  << kinect_first_to_corrected(1, 3) << " "
@@ -445,47 +444,47 @@ public:
 		  }catch(...){
 			ROS_ERROR("tf fail");
 		  }*/
-      try{
-      tf::StampedTransform transform;   // icpかました後のカメラ位置推定処理
-      tf_.lookupTransform("/base_link", "kinect_left_link",
-                ros::Time::now(), transform);
-      Eigen::Affine3d kinect_to_world_transform;
-      tf::transformTFToEigen(transform, kinect_to_world_transform); // Initial position
-      Eigen::Matrix4d matrix_kinect_to_world = kinect_to_world_transform.matrix(); //kinectからワールド座標系への変換行列の定義
-      Eigen::Matrix4d kinect_to_corrected = (icp.getFinalTransformation()).cast<double>(); //最終的に得られたICPによる変換行列を変数として置く
-      std::cout << "----ICP's matrix------------------------" << std::endl;
-      std::cout << kinect_to_corrected << std::endl;
-      std::cout << "----------------------------------------" << std::endl;
-      /*Eigen::Matrix4d kinect_left_to_corrected = world_to_corrected*matrix_kinect_to_world; //座標変換*/
-      Eigen::Matrix4d kinect_left_to_corrected = kinect_to_corrected*matrix_kinect_to_world;
+          try{
+            tf::StampedTransform transform;   // icpかました後のカメラ位置推定処理
+            tf_.lookupTransform("/base_link", "kinect_left_link",
+                                ros::Time::now(), transform);
+            Eigen::Affine3d kinect_to_world_transform;
+            tf::transformTFToEigen(transform, kinect_to_world_transform); // Initial position
+            Eigen::Matrix4d matrix_kinect_to_world = kinect_to_world_transform.matrix(); //kinectからワールド座標系への変換行列の定義
+            Eigen::Matrix4d kinect_to_corrected = (icp.getFinalTransformation()).cast<double>(); //最終的に得られたICPによる変換行列を変数として置く
+            std::cout << "----ICP's matrix------------------------" << std::endl;
+            std::cout << kinect_to_corrected << std::endl;
+            std::cout << "----------------------------------------" << std::endl;
+            /*Eigen::Matrix4d kinect_left_to_corrected = world_to_corrected*matrix_kinect_to_world; //座標変換*/
+            Eigen::Matrix4d kinect_left_to_corrected = kinect_to_corrected*matrix_kinect_to_world;
 
-      std::cout << "----Corrected position------------------" << std::endl;
-      std::cout << kinect_left_to_corrected << std::endl;
-      std::cout << "----------------------------------------" << std::endl;
+            std::cout << "----Corrected position------------------" << std::endl;
+            std::cout << kinect_left_to_corrected << std::endl;
+            std::cout << "----------------------------------------" << std::endl;
 
-      Eigen::Matrix4d kinect_left_corrected = kinect_left_to_corrected.normalized(); //正規化失敗はここ？
-      Eigen::Affine3d eigen_affine3d(kinect_left_corrected);
-      tf::transformEigenToTF(eigen_affine3d, fixed_kinect_frame_);
-      Eigen::Matrix3d rotation_matrix = kinect_left_to_corrected.block(0, 0, 3, 3); // matrix of 3 times 3 started from (0,0)
-      Eigen::Vector3d euler_angles = rotation_matrix.eulerAngles(2, 1, 0); //回転行列からオイラー角を計算
-      std::cout << "<origin xyz=\"" << kinect_left_to_corrected(0, 3) << " "
-            << kinect_left_to_corrected(1, 3) << " "
-            << kinect_left_to_corrected(2, 3) << "\" rpy=\""
-            << euler_angles(2) << " "
-            << euler_angles(1) << " "
-            << euler_angles(0) << "\" />" << std::endl;
-      }catch(...){
-      ROS_ERROR("tf fail");
-      }
+            Eigen::Matrix4d kinect_left_corrected = kinect_left_to_corrected.normalized(); //正規化失敗はここ？
+            Eigen::Affine3d eigen_affine3d(kinect_left_corrected);
+            tf::transformEigenToTF(eigen_affine3d, fixed_kinect_frame_);
+            Eigen::Matrix3d rotation_matrix = kinect_left_to_corrected.block(0, 0, 3, 3); // matrix of 4 times 4 started from (0,0)
+            Eigen::Vector3d euler_angles = rotation_matrix.eulerAngles(2, 1, 0); //回転行列からオイラー角を計算
+            std::cout << "<origin xyz=\"" << kinect_left_to_corrected(0, 3) << " "
+                      << kinect_left_to_corrected(1, 3) << " "
+                      << kinect_left_to_corrected(2, 3) << "\" rpy=\""
+                      << euler_angles(2) << " "
+                      << euler_angles(1) << " "
+                      << euler_angles(0) << "\" />" << std::endl;
+          }catch(...){
+            ROS_ERROR("tf fail");
+          }
 		  sensor_msgs::PointCloud2 ros_corrected_cloud;
 		  pcl::toROSMsg(Final, ros_corrected_cloud); //ICPこの関数の最初で定義した点群を新しい文字に代入
 		  ros_corrected_cloud.header.stamp = ros::Time::now();
 		  ros_corrected_cloud.header.frame_id = "/base_link";
 		  corrected_cloud_publisher_.publish(ros_corrected_cloud); //変換した点群をpublish
-    }
+        }
 		ros::spinOnce();
 		rate_.sleep();
-    std::cout << "===================================" << std::endl;
+        std::cout << "===================================" << std::endl;
 	  }
   }
 private:
