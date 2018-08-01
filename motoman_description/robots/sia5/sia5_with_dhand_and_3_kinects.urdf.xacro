@@ -55,9 +55,14 @@
 
   <!-- Joint -->
   <joint name="joint_left_right" type="fixed">
+  <!-- Original position -->
+  <origin xyz="-0.513 1.0085 0.756" rpy="0.0126 0.2924 -0.634" />
+
   <!-- Calibrated position -->
-  <!-- <origin xyz="-0.513 1.0085 0.756" rpy="0.0126 0.2924 -0.634" /> -->
-  <origin xyz="-0.513925 0.995299 0.72318" rpy="3.14041 2.90483 2.50322" />
+  <!-- <origin xyz="-0.513925 0.995299 0.72318" rpy="3.14041 2.90483 2.50322" /> -->
+
+  <!-- Calibrated by InteractiveMarker 2018/7/31 -->
+  <!-- <origin xyz="-0.5321 0.9764 0.7601" rpy="0.012 0.2605 -0.6153" /> -->
   
   <!-- Test positions -->
   <!-- <origin xyz="-0.600 0.800 0.600" rpy="-0.01 0.3206 -0.4815" /> -->
