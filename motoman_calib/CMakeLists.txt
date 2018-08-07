@@ -22,12 +22,11 @@ ${catkin_INCLUDE_DIRS})
 
 ## Declare a C++ executable
 ##add_executable(motoman_calib src/calib.cpp)
-add_executable(motoman_calib src/calib_yuji.cpp)
-
+# add_executable(motoman_calib src/calib_yuji.cpp)
+add_executable(motoman_calib src/calib_for_center.cpp)
 
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(motoman_calib pcl_common pcl_io
   ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${VTK_LIBRARIES}
-)
-
+  )
