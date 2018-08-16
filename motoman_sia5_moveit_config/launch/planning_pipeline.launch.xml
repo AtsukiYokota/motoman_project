@@ -3,8 +3,15 @@
   <!-- This file makes it easy to include different planning pipelines;
        It is assumed that all planning pipelines are named XXX_planning_pipeline.launch  -->
 
+  <arg name="planning_plugin" value="ompl_interface/OMPLPlanner" />
   <arg name="pipeline" default="ompl" />
+  <arg name="ompl_config" default="$(find motoman_sia5_moveit_config)/config/ompl_planning.yaml" />
+  <arg name="use_ompl" default="false" />
 
-  <include file="$(find motoman_sia5_moveit_config)/launch/$(arg pipeline)_planning_pipeline.launch.xml" />
+  <include file="$(find motoman_sia5_moveit_config)/launch/$(arg pipeline)_planning_pipeline.launch.xml" >
+    <arg name="ompl_config" value="$(arg ompl_config)" if="$(arg use_ompl)"/>
+  </include>
+
+  <rosparam command="load" file="$(arg ompl_config)"/>
 
 </launch>
