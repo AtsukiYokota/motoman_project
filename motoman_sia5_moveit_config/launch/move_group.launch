@@ -81,7 +81,7 @@
     <!-- MoveGroup capabilities to load -->
     <param if="$(arg use_depth_sensor)" name="capabilities"
        value="move_group/MoveGroupCartesianPathService
-              move_group/MoveGroupExecuteService
+              move_group/MoveGroupExecuteTrajectoryAction
               move_group/MoveGroupKinematicsService
               move_group/MoveGroupMoveAction
               move_group/MoveGroupPickPlaceAction
@@ -92,7 +92,7 @@
               " />
     <param unless="$(arg use_depth_sensor)" name="capabilities"
        value="move_group/MoveGroupCartesianPathService
-              move_group/MoveGroupExecuteService
+              move_group/MoveGroupExecuteTrajectoryAction
               move_group/MoveGroupKinematicsService
               move_group/MoveGroupMoveAction
               move_group/MoveGroupPickPlaceAction
